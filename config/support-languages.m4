@@ -37,9 +37,7 @@ ROSE_SUPPORT_X10_FRONTEND()
 #########################################################################################
 #
 ##
-  #ALL_SUPPORTED_LANGUAGES="binaries c c++ cuda fortran java php python opencl"
-  ALL_SUPPORTED_LANGUAGES="binaries c c++ cuda fortran java php x10     opencl"
-  #ALL_SUPPORTED_LANGUAGES="binaries c c++ cuda fortran java php        opencl"
+  ALL_SUPPORTED_LANGUAGES="binaries c c++ cuda fortran java php x10 opencl"
 ##
 #
 #########################################################################################
@@ -60,21 +58,83 @@ ROSE_SUPPORT_X10_FRONTEND()
 #  especially if they are conflicting.
 if test "x$USER_GAVE_ENABLE_ONLY_LANGUAGE_CONFIG_OPTION" = "xno" ; then
 AC_ARG_ENABLE([languages],
-               AS_HELP_STRING([--enable-languages=LIST],[Build specific languages: all,none,binaries,c,c++,cuda,fortran,java,x10,opencl,php,python (default=all)]),,
+               AS_HELP_STRING([--enable-languages=LIST],[]),,
                [enableval=all])
 
-	       # Default support for all languages
-	       case "$enableval" in
- 	         all|yes)
-		 	LANGUAGES_TO_SUPPORT="$ALL_SUPPORTED_LANGUAGES"
-		 	;;
-                 *)
-                 	LANGUAGES_TO_SUPPORT="$enableval"
-                 	;;
-	       esac
 
-# Convert support-language-list to a space-separated list, stripping
-# leading and trailing whitespace
+  #============================================================================
+  # --enable-languages=<all, none, binaries, c, c++, cuda, fortran, java, x10, opencl, php, python (default=none)>
+  #============================================================================
+  ROSE_ARG_ENABLE(
+    [languages],
+    [which language frontends to enable],
+    [Build specific languages: all, none, binaries, c, c++, cuda, fortran, java, x10, opencl, php, python (default=none)],
+    [none]
+  )
+
+  if test "x$CONFIG_HAS_ROSE_ENABLE_LANGUAGES" = "xno"; then
+    AC_MSG_CHECKING([if \[$][ROSE_LANGUAGES] environment variable is set])
+    if test -n "[$][ROSE_LANGUAGES]"; then
+        AC_MSG_RESULT([yes])
+        ROSE_ENABLE_LANGUAGES="[$][ROSE_LANGUAGES]"
+    else
+        AC_MSG_RESULT([no])
+
+        ROSE_MSG_ERROR([
+
+Please specify the languages you want ROSE to be compiled to support. Here is a
+list of currently supported languages:
+
+    $ALL_SUPPORTED_LANGUAGES
+
+To specify your selection of languages, use one of these methods:
+
+    1. Configure Option         --enable-languages="<language1 language2 ... languageN>"
+    2. Environment Variable     ROSE_LANGUAGES="<language1 language2 ... languageN>"
+
+                                Note: If you always configure all of your builds of ROSE
+                                with the same language, you may want to add this variable
+                                to your shell profile (e.g. .bashrc) so it will always be
+                                set to your desired default.
+
+    Example 1.
+    
+        [$] ROSE/configure --enable-languages="c c++ fortran"
+    
+    Example 2.
+    
+        [$] ROSE_LANGUAGES="java" ROSE/configure
+    
+    Example 3.
+    
+        [$] export ROSE_LANGUAGES="java"
+        [$] ROSE/configure
+
+The reason we require you to specify precisely the languages you want is
+to save you time and effort by bypassing features you don't want.
+
+Firstly, certain features may have dependencies, which could cause you
+headaches to install them. So if you don't care for a feature, simply don't
+enable it and avoid having to install its accompanying dependencies.
+
+Secondly, enabling unwanted features will cause your build times to be
+unnecessarily long. So don't enable a feature to save yourself time, energy,
+and effort.
+
+Please re-run configure after specifying your desired languages.
+])
+    fi
+  fi
+
+  # Default support for all languages
+  case "$ROSE_ENABLE_LANGUAGES" in
+    all|yes)  LANGUAGES_TO_SUPPORT="$ALL_SUPPORTED_LANGUAGES"
+              ;;
+          *)  LANGUAGES_TO_SUPPORT="$ROSE_ENABLE_LANGUAGES"
+              ;;
+  esac
+
+# Convert support-language-list to a space-separated list, stripping leading and trailing whitespace
 LANGUAGES_TO_SUPPORT="`echo $LANGUAGES_TO_SUPPORT | sed -e 's/,/ /g;s/^[ \t]*//;s/[ \t]*$//'`" 
 #DEBUG#echo "LANGUAGES_TO_SUPPORT='$LANGUAGES_TO_SUPPORT'"
 
